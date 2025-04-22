@@ -37,14 +37,12 @@ namespace BreakoutPC
 
         private void Update(object sender, EventArgs e)
         {
-            // Movimento contínuo do paddle
             int step = 10;
             if (moveLeft && paddle.X > 0)
                 paddle.X -= step;
             if (moveRight && paddle.X + paddle.Width < this.ClientSize.Width)
                 paddle.X += step;
 
-            // Física da bola
             vy += gravity;
             ball.X += (int)vx;
             ball.Y += (int)vy;
@@ -56,6 +54,7 @@ namespace BreakoutPC
                 vy *= -1;
             }
 
+            // Colisão com paredes
             if (ball.X <= 0 || ball.X + ball.Width >= this.ClientSize.Width)
                 vx *= -1;
 
@@ -65,9 +64,19 @@ namespace BreakoutPC
                 vy *= -1;
             }
 
-            if (ball.Y + ball.Height >= this.ClientSize.Height)
+            // Colisão com chão (ajuste visual com DoEvents)
+            if (ball.Y + ball.Height >= this.ClientSize.Height - 2)
             {
-                ball.Y = this.ClientSize.Height - ball.Height;
+                ball.Y = this.ClientSize.Height - ball.Height - 2;
+
+                Invalidate();            // Redesenha a tela
+                Update();               // Força o update
+                Application.DoEvents(); // Garante que o Draw() execute antes do MessageBox
+
+                timer.Stop();
+                MessageBox.Show("A bolinha caiu! Pressione OK para continuar.", "Pause");
+                timer.Start();
+
                 vy *= -1;
             }
 
@@ -80,6 +89,10 @@ namespace BreakoutPC
             g.Clear(Color.Black);
             g.FillRectangle(Brushes.Red, paddle);
             g.FillEllipse(Brushes.White, ball);
+
+            // Linha amarela no limite inferior
+            Pen yellowPen = new Pen(Color.Yellow, 2);
+            g.DrawLine(yellowPen, 0, this.ClientSize.Height - 2, this.ClientSize.Width, this.ClientSize.Height - 2);
         }
 
         private void OnKeyDown(object sender, KeyEventArgs e)
